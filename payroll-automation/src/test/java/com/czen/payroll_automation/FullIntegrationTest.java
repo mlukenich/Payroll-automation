@@ -4,6 +4,7 @@ import com.czen.payroll_automation.model.Department;
 import com.czen.payroll_automation.model.Employee;
 import com.czen.payroll_automation.model.JobCode;
 import com.czen.payroll_automation.model.TimeEntry;
+import com.czen.payroll_automation.repository.TimeEntryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,9 @@ public class FullIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private TimeEntryRepository timeEntryRepository;
 
     @Test
     public void testValidTimeEntry() {
@@ -48,14 +52,17 @@ public class FullIntegrationTest {
 
         // When
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "http://localhost:" + port + "/api/payroll/validate",
+                "http://localhost:" + port + "/api/payroll/time-entries",
                 request,
                 String.class
         );
 
         // Then
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        assertThat(response.getBody()).isEqualTo("Time entry is valid.");
+        assertThat(response.getBody()).isEqualTo("Time entry saved successfully.");
+
+        // Verify persistence
+        assertThat(timeEntryRepository.count()).isGreaterThan(0);
     }
 
     @Test
@@ -81,7 +88,7 @@ public class FullIntegrationTest {
 
         // When
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "http://localhost:" + port + "/api/payroll/validate",
+                "http://localhost:" + port + "/api/payroll/time-entries",
                 request,
                 String.class
         );
