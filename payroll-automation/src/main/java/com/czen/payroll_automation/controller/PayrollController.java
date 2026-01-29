@@ -1,7 +1,7 @@
 package com.czen.payroll_automation.controller;
 
 import com.czen.payroll_automation.model.TimeEntry;
-import com.czen.payroll_automation.service.ValidationService;
+import com.czen.payroll_automation.service.TimeEntryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,20 +13,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/payroll")
 public class PayrollController {
 
-    private final ValidationService validationService;
+    private final TimeEntryService timeEntryService;
 
     @Autowired
-    public PayrollController(ValidationService validationService) {
-        this.validationService = validationService;
+    public PayrollController(TimeEntryService timeEntryService) {
+        this.timeEntryService = timeEntryService;
     }
 
-    @PostMapping("/validate")
-    public ResponseEntity<String> validateTimeEntry(@RequestBody TimeEntry timeEntry) {
-        boolean isValid = validationService.validateTimeEntry(timeEntry);
-        if (isValid) {
-            return ResponseEntity.ok("Time entry is valid.");
-        } else {
-            return ResponseEntity.badRequest().body("Time entry is invalid.");
+    @PostMapping("/time-entries")
+    public ResponseEntity<String> submitTimeEntry(@RequestBody TimeEntry timeEntry) {
+        try {
+            timeEntryService.saveTimeEntry(timeEntry);
+            return ResponseEntity.ok("Time entry saved successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

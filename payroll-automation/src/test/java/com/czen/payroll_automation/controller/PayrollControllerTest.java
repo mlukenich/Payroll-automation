@@ -27,7 +27,7 @@ class PayrollControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void testValidateTimeEntry_Valid() throws Exception {
+    void testSubmitTimeEntry_Valid() throws Exception {
         Employee employee = new Employee();
         employee.setId(1L);
         Department department = new Department();
@@ -39,15 +39,15 @@ class PayrollControllerTest {
         timeEntry.setDepartment(department);
         timeEntry.setJobCode(jobCode);
 
-        mockMvc.perform(post("/api/payroll/validate")
+        mockMvc.perform(post("/api/payroll/time-entries")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(timeEntry)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Time entry is valid."));
+                .andExpect(content().string("Time entry saved successfully."));
     }
 
     @Test
-    void testValidateTimeEntry_Invalid() throws Exception {
+    void testSubmitTimeEntry_Invalid() throws Exception {
         Employee employee = new Employee();
         employee.setId(99L); // Non-existent employee
         Department department = new Department();
@@ -59,7 +59,7 @@ class PayrollControllerTest {
         timeEntry.setDepartment(department);
         timeEntry.setJobCode(jobCode);
 
-        mockMvc.perform(post("/api/payroll/validate")
+        mockMvc.perform(post("/api/payroll/time-entries")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(timeEntry)))
                 .andExpect(status().isBadRequest())
