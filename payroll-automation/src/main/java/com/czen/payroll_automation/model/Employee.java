@@ -1,41 +1,32 @@
 package com.czen.payroll_automation.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Data
+@NoArgsConstructor
 public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+
+    private String name; // Full Name
     private String email;
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+    @Column(unique = true)
+    private String employeeId; // Paylocity ID
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String status;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public Employee(String name, String email) {
         this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
         this.email = email;
     }
 }
