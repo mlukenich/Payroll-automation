@@ -1,32 +1,34 @@
 package com.czen.payroll_automation.controller;
 
-import com.czen.payroll_automation.model.TimeEntry;
-import com.czen.payroll_automation.service.TimeEntryService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.czen.payroll_automation.domain.PayrollBatchEntity;
+import com.czen.payroll_automation.dto.PayrollInputDto;
+import com.czen.payroll_automation.service.PayrollService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payroll")
+@RequiredArgsConstructor
 public class PayrollController {
 
-    private final TimeEntryService timeEntryService;
+    private final PayrollService payrollService;
 
-    @Autowired
-    public PayrollController(TimeEntryService timeEntryService) {
-        this.timeEntryService = timeEntryService;
+    @PostMapping("/sync-employees")
+    public ResponseEntity<String> syncEmployees() {
+        payrollService.syncEmployees();
+        return ResponseEntity.ok("Employee synchronization started/completed successfully.");
     }
 
-    @PostMapping("/time-entries")
-    public ResponseEntity<String> submitTimeEntry(@RequestBody TimeEntry timeEntry) {
-        try {
-            timeEntryService.saveTimeEntry(timeEntry);
-            return ResponseEntity.ok("Time entry saved successfully.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    @PostMapping("/submit")
+    public ResponseEntity<PayrollBatchEntity> submitPayroll(@RequestBody PayrollInputDto input) {
+        PayrollBatchEntity batch = payrollService.processPayroll(input);
+        return ResponseEntity.accepted().body(batch);
+    }
+
+    @GetMapping("/batch/{trackingId}")
+    public ResponseEntity<PayrollBatchEntity> getBatchStatus(@PathVariable String trackingId) {
+        PayrollBatchEntity batch = payrollService.updateBatchStatus(trackingId);
+        return ResponseEntity.ok(batch);
     }
 }
