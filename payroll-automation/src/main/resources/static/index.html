@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .chat-container { max-width: 800px; margin: 50px auto; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; height: 80vh; }
+        .chat-header { background: #007bff; color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 1.2rem; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 80%; padding: 12px 18px; border-radius: 20px; font-size: 0.95rem; line-height: 1.4; }
+        .message.user { align-self: flex-end; background-color: #007bff; color: white; border-bottom-right-radius: 2px; }
+        .message.agent { align-self: flex-start; background-color: #e9ecef; color: #333; border-bottom-left-radius: 2px; }
+        .chat-input { padding: 20px; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        .chat-input input { flex: 1; border-radius: 25px; padding: 10px 20px; border: 1px solid #ddd; outline: none; }
+        .chat-input button { border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; }
+        .typing { font-style: italic; font-size: 0.8rem; color: #888; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        Payroll AI Assistant
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="message agent">
+            Hello! I'm your payroll assistant. How can I help you today? You can ask me to sync employees, submit payroll, or check batch status.
+        </div>
+    </div>
+    <div id="typingIndicator" class="px-4 typing">Assistant is thinking...</div>
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+        <button class="btn btn-primary" onclick="sendMessage()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-send-fill" viewBox="0 0 16 16">
+                <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    const chatId = 'session-' + Math.random().toString(36).substr(2, 9);
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+    const typingIndicator = document.getElementById('typingIndicator');
+
+    function appendMessage(role, text) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${role}`;
+        msgDiv.innerHTML = marked.parse(text);
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        appendMessage('user', text);
+        userInput.value = '';
+        typingIndicator.style.display = 'block';
+
+        try {
+            const response = await fetch('/api/agent/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chatId, message: text })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                appendMessage('agent', 'Error from server: ' + errorText);
+                return;
+            }
+
+            const data = await response.json();
+            if (data && data.response) {
+                appendMessage('agent', data.response);
+            } else {
+                appendMessage('agent', 'The assistant returned an empty response.');
+            }
+        } catch (error) {
+            appendMessage('agent', 'Sorry, I encountered an error. Please try again.');
+            console.error('Error:', error);
+        } finally {
+            typingIndicator.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
